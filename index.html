@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monster Slayer</title>
+    <script src="https://npmcdn.com/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="css/foundation.min.css">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app">
+    <section class="row">
+        <div class="small-6 columns">
+            <h1 class="text-center">YOU</h1>
+            <div class="healthbar">
+                <div
+                        class="healthbar text-center"
+                        :style="{width: youCounter + '%'}"
+                        style="background-color: green; margin: 0; color: white;">
+                    {{ youCounter }}
+                </div>
+            </div>
+        </div>
+        <div class="small-6 columns">
+            <h1 class="text-center">MONSTER</h1>
+            <div class="healthbar">
+                <div
+                        class="healthbar text-center"
+                        :style="{width: monsterCounter + '%'}"
+                        style="background-color: green; margin: 0; color: white;">
+                    {{ monsterCounter }}
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="row controls" v-if="show">
+        <div class="small-12 columns">
+            <button id="start-game" @click="show = !show">START NEW GAME</button>
+        </div>
+    </section>
+    <section class="row controls" v-else>
+        <div class="small-12 columns">
+            <button id="attack" @click="attack">ATTACK</button>
+            <button id="special-attack" @click="attack($event, true)">SPECIAL ATTACK</button>
+            <button id="heal" @click="heal">HEAL</button>
+            <button id="give-up" @click="giveUp">GIVE UP</button>
+        </div>
+    </section>
+    <section class="row log">
+        <div class="small-12 columns">
+            <ul>
+                <li v-for="attack in listOfAttacks" :class="{ 'monster-turn': attack.who==='Monster', 'player-turn': attack.who==='Player'}">
+                    {{ attack.who }} {{ attack.event }} {{ attack.whom }} for {{ attack.howMany }}
+                </li>
+            </ul>
+        </div>
+    </section>
+</div>
+
+<script>
+    function getRandomIntInclusive(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    new Vue({
+        el: '#app',
+        data: {
+            show: true,
+            youCounter: 100,
+            monsterCounter: 100,
+            listOfAttacks: [],
+        },
+        methods: {
+            attack: function($event, isSpecial = false) {
+                let monsterLosesLife = getRandomIntInclusive(5, 11);
+                if (isSpecial) {
+                     monsterLosesLife += 5;
+                }
+
+                this.listOfAttacks.push({
+                    who: 'Player',
+                    whom: 'Monster',
+                    howMany: monsterLosesLife,
+                    event: 'attacks'
+                });
+                this.monster();
+                this.monsterCounter -= monsterLosesLife;
+                if (this.monsterCounter <= 0) {
+                        if(confirm('You Won! New Game?')) {
+                            this.giveUp();
+                        }
+                }
+            },
+            heal: function() {
+               const healAmount = 10;
+               this.youCounter += healAmount;
+               if (this.youCounter > 100) {
+                   this.youCounter = 100;
+               }
+                this.listOfAttacks.push({
+                    who: 'Player',
+                    whom: 'themselves',
+                    howMany: healAmount,
+                    event: 'heals'
+                });
+                this.monster()
+            },
+            monster: function () {
+                let playerLosesLife = getRandomIntInclusive(5, 11);
+                this.youCounter -= playerLosesLife;
+                this.listOfAttacks.push({
+                    who: 'Monster',
+                    whom: 'Player',
+                    howMany: playerLosesLife,
+                    event: 'attacks'
+                });
+                if (this.youCounter <= 0) {
+                    alert('You Lost')
+                }
+            },
+            giveUp: function () {
+                this.show = true;
+                this.youCounter = 100;
+                this.monsterCounter = 100;
+                this.listOfAttacks = [];
+            }
+        }
+    })
+</script>
+</body>
+</html>
