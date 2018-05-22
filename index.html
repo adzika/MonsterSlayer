@@ -32,9 +32,9 @@
             </div>
         </div>
     </section>
-    <section class="row controls" v-if="show">
+    <section class="row controls" v-if="showNewGame">
         <div class="small-12 columns">
-            <button id="start-game" @click="show = !show">START NEW GAME</button>
+            <button id="start-game" @click="showNewGame = !showNewGame">START NEW GAME</button>
         </div>
     </section>
     <section class="row controls" v-else>
@@ -45,7 +45,7 @@
             <button id="give-up" @click="giveUp">GIVE UP</button>
         </div>
     </section>
-    <section class="row log">
+    <section class="row log" v-if="listOfAttacks.length > 0">
         <div class="small-12 columns">
             <ul>
                 <li v-for="attack in listOfAttacks" :class="{ 'monster-turn': attack.who==='Monster', 'player-turn': attack.who==='Player'}">
@@ -65,7 +65,7 @@
     new Vue({
         el: '#app',
         data: {
-            show: true,
+            showNewGame: true,
             youCounter: 100,
             monsterCounter: 100,
             listOfAttacks: [],
@@ -73,23 +73,20 @@
         methods: {
             attack: function($event, isSpecial = false) {
                 let monsterLosesLife = getRandomIntInclusive(5, 11);
+                let event = 'attacks';
                 if (isSpecial) {
                      monsterLosesLife += 5;
+                    event = 'smashes';
                 }
-
                 this.listOfAttacks.push({
                     who: 'Player',
                     whom: 'Monster',
                     howMany: monsterLosesLife,
-                    event: 'attacks'
+                    event
                 });
-                this.monster();
                 this.monsterCounter -= monsterLosesLife;
-                if (this.monsterCounter <= 0) {
-                        if(confirm('You Won! New Game?')) {
-                            this.giveUp();
-                        }
-                }
+                this.monster();
+                this.checkWin();
             },
             heal: function() {
                const healAmount = 10;
@@ -114,18 +111,34 @@
                     howMany: playerLosesLife,
                     event: 'attacks'
                 });
-                if (this.youCounter <= 0) {
-                    alert('You Lost')
-                }
+                this.checkWin();
             },
             giveUp: function () {
-                this.show = true;
+                this.showNewGame = true;
                 this.youCounter = 100;
                 this.monsterCounter = 100;
                 this.listOfAttacks = [];
+            },
+            checkWin:function() {
+                if (this.monsterCounter <= 0) {
+                    if(confirm('You Won! New Game?')) {
+                        this.giveUp();
+                    } else {
+                        this.showNewGame = true;
+                    }
+                    return false;
+                } else if (this.youCounter <= 0) {
+                    if (confirm('You Lost! New Game?')) {
+                        this.giveUp();
+                    } else {
+                        this.showNewGame = true;
+                    }
+                    return false;
+                }
+                return true;
             }
         }
-    })
+    });
 </script>
 </body>
 </html>
